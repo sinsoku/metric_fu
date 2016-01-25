@@ -52,55 +52,52 @@ describe MetricFu::ReekGenerator do
 
     context "with reek warnings" do
       before :each do
-        @smells = [
+        @smells = {
+          'app/controllers/activity_reports_controller.rb' => [
             instance_double(@smell_warning,
-                            source: "app/controllers/activity_reports_controller.rb",
                             context: "ActivityReportsController#authorize_user",
                             message: "calls current_user.primary_site_ids multiple times",
                             smell_type: "Duplication",
                             lines: [2, 4]),
             instance_double(@smell_warning,
-                            source: "app/controllers/activity_reports_controller.rb",
                             context: "ActivityReportsController#authorize_user",
                             message: "calls params[id] multiple times",
                             smell_type: "Duplication",
                             lines: [5, 7]),
             instance_double(@smell_warning,
-                            source: "app/controllers/activity_reports_controller.rb",
                             context: "ActivityReportsController#authorize_user",
                             message: "calls params[primary_site_id] multiple times",
                             smell_type: "Duplication",
                             lines: [11, 15]),
             instance_double(@smell_warning,
-                            source: "app/controllers/activity_reports_controller.rb",
                             context: "ActivityReportsController#authorize_user",
                             message: "has approx 6 statements",
                             smell_type: "Long Method",
-                            lines: [8]),
-
+                            lines: [8])
+          ], 'app/controllers/application.rb' => [
             instance_double(@smell_warning,
-                            source: "app/controllers/application.rb",
                             context: "ApplicationController#start_background_task/block/block",
                             message: "is nested",
                             smell_type: "Nested Iterators",
-                            lines: [23]),
-
+                            lines: [23])
+          ], 'app/controllers/link_targets_controller.rb' => [
             instance_double(@smell_warning,
-                            source: "app/controllers/link_targets_controller.rb",
                             context: "LinkTargetsController#authorize_user",
                             message: "calls current_user.role multiple times",
                             smell_type: "Duplication",
-                            lines: [8]),
-
+                            lines: [8])
+          ], 'app/controllers/newline_controller.rb' => [
             instance_double(@smell_warning,
-                            source: "app/controllers/newline_controller.rb",
                             context: "NewlineController#some_method",
                             message: "calls current_user.<< \"new line\n\" multiple times",
                             smell_type: "Duplication",
                             lines: [6, 9])
-        ]
-        @lines = instance_double(@examiner, smells: @smells)
-        @reek.instance_variable_set(:@output, @lines)
+          ]
+        }
+        @output = @smells.map do |description, smells|
+          instance_double(@examiner, description: description, smells: smells)
+        end
+        @reek.instance_variable_set(:@output, @output)
         @matches = @reek.analyze
       end
 
@@ -131,38 +128,6 @@ describe MetricFu::ReekGenerator do
 
       it "should NOT insert nil smells into the array when there's a newline in the method call" do
         expect(@matches.last[:code_smells]).to eq(@matches.last[:code_smells].compact)
-      end
-    end
-
-    context "with reek 1.3 output" do
-      before :each do
-        @smells = [
-            double(source: "app/controllers/activity_reports_controller.rb",
-                   context: "ActivityReportsController#authorize_user",
-                   message: "calls current_user.primary_site_ids multiple times",
-                   subclass: "Duplication",
-                   lines: [2, 4]),
-        ]
-        @lines = instance_double(@examiner, smells: @smells)
-        @reek.instance_variable_set(:@output, @lines)
-        @matches = @reek.analyze
-      end
-
-      it "uses the subclass field to find the smell type" do
-        smell = @matches.first[:code_smells].first
-        expect(smell[:type]).to eq('Duplication')
-      end
-    end
-
-    context "without reek warnings" do
-      before :each do
-        @lines = instance_double(@examiner, smells: [])
-        @reek.instance_variable_set(:@output, @lines)
-        @matches = @reek.analyze
-      end
-
-      it "returns empty analysis" do
-        expect(@matches).to eq([])
       end
     end
   end

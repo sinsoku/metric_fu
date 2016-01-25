@@ -15,14 +15,13 @@ module MetricFu
     end
 
     def run!(files, config_files)
-      examiner.new(files, config_files)
+      files.map { |f| examiner.new(File.new(f), config_files) }
     end
 
     def analyze
-      @matches = @output.smells.group_by(&:source).collect do |file_path, smells|
-        { file_path: file_path,
-          code_smells: analyze_smells(smells) }
-      end
+      @matches = @output
+        .reject { |e| e.smells.empty? }
+        .map { |e| { file_path: e.description, code_smells: analyze_smells(e.smells) } }
     end
 
     def to_h
